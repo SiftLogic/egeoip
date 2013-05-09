@@ -8,6 +8,9 @@
 
 -behaviour(gen_server).
 
+%% timeout for lookup call
+-define(LOOKUP_TIMEOUT, 10000).
+
 %% record access API
 -export([get/2]).
 -export([record_fields/0]).
@@ -123,7 +126,7 @@ lookup(Address) when is_integer(Address) ->
     case whereis(egeoip) of
         undefined ->
             Worker = get_worker(Address),
-            gen_server:call(Worker, {lookup, Address});
+            gen_server:call(Worker, {lookup, Address}, ?LOOKUP_TIMEOUT);
         Pid ->
             unregister(egeoip),
             register(egeoip_0, Pid),
