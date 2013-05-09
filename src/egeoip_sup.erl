@@ -6,6 +6,8 @@
 
 -behaviour(supervisor).
 
+-define(DEFAULT_WORKERS, 20).
+
 -export([start_link/0]).
 -export([init/1]).
 -export([worker/2, worker_names/0]).
@@ -15,23 +17,25 @@ start_link() ->
 
 init([]) ->
     File = case application:get_env(egeoip, dbfile) of
-	       {ok, Other} ->
-		   Other;
-	       _ ->
-		   city
-	   end,
+               {ok, Other} ->
+                   Other;
+               _ ->
+                   city
+           end,
     Processes = worker(tuple_to_list(worker_names()), File),
     {ok, {{one_for_one, 5, 300}, Processes}}.
 
 worker_names() ->
-    {egeoip_0,
-     egeoip_1,
-     egeoip_2,
-     egeoip_3,
-     egeoip_4,
-     egeoip_5,
-     egeoip_6,
-     egeoip_7}.
+    erlang:list_to_tuple(
+      [erlang:list_to_atom("egeoip_"
+                               ++ (erlang:integer_to_list(X - 1)))
+         || X <- lists:seq(1,
+                           case application:get_env(num_workers) of
+                               {ok, Num} ->
+                                   Num + 1;
+                               _ ->
+                                   ?DEFAULT_WORKERS + 1
+                           end)]).
 
 worker([], _File) ->
     [];

@@ -222,8 +222,8 @@ handle_info(Info, State) ->
 
 %% Implementation
 get_worker(Address) ->
-    element(1 + erlang:phash2(Address) band 7,
-            egeoip_sup:worker_names()).
+    Workers = egeoip_sup:worker_names(),
+    element(random:uniform(size(Workers)), Workers).
 
 log_error(Info) ->
     error_logger:info_report([?MODULE|Info]).
